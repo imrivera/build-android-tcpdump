@@ -112,7 +112,7 @@ download_file() {
     local URL="$1"
     if [ "${DOWNLOADER}" = "wget" ]; then
         wget "${URL}"
-    elif ["${DOWNLOADER}" = "curl"]; then
+    elif [ "${DOWNLOADER}" = "curl" ]; then
         curl -O "${URL}"
     fi
     if [ $? -ne 0 ]; then
@@ -205,7 +205,7 @@ check_compiler_tools() {
     CC=""
     COMPILERS=$(find "${NDK}/toolchains/${toolchain_dir}/prebuilt" -type f -name "*-gcc")
     for compiler in $COMPILERS; do
-        echo -n "Testing ${compiler}... "
+        printf "Testing ${compiler}... "
         $compiler --version >/dev/null 2>&1
         if [ $? -eq 0 ]; then
             echo "OK"
@@ -218,12 +218,30 @@ check_compiler_tools() {
     if [ -z "${CC}" ]; then
         echo "ERROR: Can't find a valid compiler"
     fi
+   
+    RANLIB_TOOL=""
+    RANLIBS=$(find "${NDK}/toolchains/${toolchain_dir}/prebuilt" -type f -name "*-ranlib")
+    for ranlib in $RANLIBS; do
+        printf "Testing ${ranlib}... "
+        $ranlib --version >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo "OK"
+            RANLIB_TOOL="${ranlib}"
+            break
+        fi
+        echo "NOT VALID"
+    done
+
+    if [ -z "${RANLIB_TOOL}" ]; then
+        echo "ERROR: Can't find a valid ranlib tool"
+    fi
+    
 
     if [ "${SHOULD_STRIP}" = "yes" ]; then
         STRIP_TOOL=""
         local STRIP_TOOLS=$(find "${NDK}/toolchains/${toolchain_dir}/prebuilt" -type f -name "*-strip")
         for strip_tool in $STRIP_TOOLS; do
-            echo -n "Testing ${strip_tool}... "
+            printf "Testing ${strip_tool}... "
             $strip_tool --version >/dev/null 2>&1
             if [ $? -eq 0 ]; then
                 echo "OK"
@@ -366,6 +384,17 @@ for ARCH in ${ARCHS}; do
         echo "ERROR: Failed compiling libpcap"
         exit 4
     fi    
+
+    if [ ! -f libpcap.a ]; then
+        echo "ERROR: lipcap.a not generated"
+        exit 4
+    fi
+
+    ${RANLIB_TOOL} libpcap.a
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed executing ${RANLIB_TOOL} on libpcap.a"
+        exit 4
+    fi
 
     echo "Compiling tcpdump for ${ARCH}..."
     cd "${DIR_TCPDUMP}"

@@ -1,6 +1,6 @@
 Overview
 --------
-This script downloads and compiles tcpdump for use on Android devices.
+This script downloads and compiles tcpdump for use on Android devices. It works on Linux and OSX.
 
 It creates PIE (Position Independant Executable) files, so they also work on Lollipop and Marshmallow.
 
@@ -8,8 +8,7 @@ How to use
 ----------
 Install the latest [Android NDK](http://developer.android.com/ndk/downloads/index.html) then:
 
-    export NDK=/path/to/ndk
-    ./build-android-tcpdump
+    ./build-android-tcpdump -n /path/to/ndk
 
 Options
 -------
